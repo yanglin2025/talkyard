@@ -1320,6 +1320,17 @@ trait UserSiteDaoMixin extends SiteTransaction {  // RENAME; QUICK // to UserSit
   }
 
 
+  def updateMemberPasswordHash(userId: UserId, newPasswordHash: String): Unit = {
+    val statement = """
+      UPDATE users3 
+      SET password_hash = ? 
+      WHERE site_id = ? 
+        AND user_id = ?
+    """
+    runUpdate(statement, List(newPasswordHash, siteId.asAnyRef, userId.asAnyRef))
+  }
+
+
   // See also:  loadUsersWithUsernamePrefix(usernamePrefix, ...): Seq[User]
   //
   COULD_OPTIMIZE // Don't need to load all UserBr fields. Previously loaded just

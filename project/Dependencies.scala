@@ -234,6 +234,11 @@ object Dependencies {
     // and: https://mvnrepository.com/artifact/com.lambdaworks/scrypt
     val lambdaworksScrypt = "com.lambdaworks" % "scrypt" % "1.4.0"
 
+    // BCrypt for password migration support
+    // See: https://github.com/jeremyh/jBCrypt
+    // and: https://mvnrepository.com/artifact/org.mindrot/jbcrypt
+    val jbcrypt = "org.mindrot" % "jbcrypt" % "0.4"
+
 
     // ----- Test
 

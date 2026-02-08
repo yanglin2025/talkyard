@@ -132,6 +132,24 @@ class LoginWithPasswordController @Inject()(cc: ControllerComponents, edContext:
       }
     }
 
+    // 自动迁移：如果密码哈希是 bcrypt，转换为 scrypt
+    import talkyard.server.security.PasswordMigration
+    if (PasswordMigration.needsMigration(loginGrant.user.passwordHash.getOrElse(""))) {
+      try {
+        val newHash = PasswordMigration.generateScryptHash(password)
+        dao.updateMemberPasswordHash(loginGrant.user.id, newHash)
+        logger.info(
+          s"Migrated password hash for user ${loginGrant.user.username} " +
+          s"from ${PasswordMigration.getHashType(loginGrant.user.passwordHash.getOrElse(""))} to scrypt " +
+          s"[TyMPWDMIGR]"
+        )
+      } catch {
+        case ex: Exception =>
+          // 迁移失败不影响登录，只记录警告
+          logger.warn(s"Failed to migrate password for user ${loginGrant.user.username}: ${ex.getMessage}", ex)
+      }
+    }
+
     dao.pubSub.userIsActive(request.siteId, loginGrant.user, request.theBrowserIdData)
     val (sid: SidOk, xsrfToken: XsrfOk, sidAndXsrfCookies) =
           createSessionIdAndXsrfToken(request, loginGrant.user.id)

@@ -845,6 +845,13 @@ trait UserDao {
   }
 
 
+  def updateMemberPasswordHash(userId: UserId, newPasswordHash: String): Unit = {
+    readWriteTransaction { tx =>
+      tx.updateMemberPasswordHash(userId, newPasswordHash)
+    }
+  }
+
+
   def loginAsGuest(loginAttempt: GuestLoginAttempt): Guest = {
     val settings = getWholeSiteSettings()
     dieIf(!settings.canLoginAsGuest, "TyE052MAKD3", "Guest login not enabled")

@@ -145,21 +145,21 @@ class LoginWithPasswordController @Inject()(cc: ControllerComponents, edContext:
           // Update password hash in database
           dao.updateUserPasswordHash(loginGrant.user.id, newHash)
           
-          // Log successful migration
+          // Log successful migration (use user ID for privacy)
           val hashType = 
             if (currentHash.startsWith("$2a$")) "bcrypt-2a"
             else if (currentHash.startsWith("$2b$")) "bcrypt-2b"
             else "bcrypt-2y"
           
           logger.info(
-            s"Migrated password for user ${loginGrant.user.username} " +
+            s"Migrated password for user ID ${loginGrant.user.id} " +
             s"from $hashType to scrypt [TyMPWDMIGR]"
           )
         } catch {
           case ex: Exception =>
             // Log error but don't block login - migration can happen next time
             logger.warn(
-              s"Failed to migrate password for user ${loginGrant.user.username}: " +
+              s"Failed to migrate password for user ID ${loginGrant.user.id}: " +
               s"${ex.getMessage} [TyEPWDMIGR]",
               ex
             )

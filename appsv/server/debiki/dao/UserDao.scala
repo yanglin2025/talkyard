@@ -849,12 +849,17 @@ trait UserDao {
    * Update user's password hash (for password migration).
    * This method skips password strength validation since it's used
    * for migrating existing validated passwords to a new format.
+   * Includes concurrency protection: only updates if current hash is still bcrypt.
    */
   def updateUserPasswordHash(userId: UserId, newPasswordHash: String): Unit = {
     readWriteTransaction { tx =>
       var user = tx.loadTheUserInclDetails(userId)
-      user = user.copy(passwordHash = Some(newPasswordHash))
-      tx.updateUserInclDetails(user)
+      // Only update if current hash is still bcrypt (prevents race conditions)
+      val currentHash = user.passwordHash.getOrElse("")
+      if (currentHash.startsWith("$2a$") || currentHash.startsWith("$2b$") || currentHash.startsWith("$2y$")) {
+        user = user.copy(passwordHash = Some(newPasswordHash))
+        tx.updateUserInclDetails(user)
+      }
     }
   }
 

@@ -132,7 +132,7 @@ class LoginWithPasswordController @Inject()(cc: ControllerComponents, edContext:
       }
     }
 
-    // 自动迁移：如果密码哈希是 bcrypt，转换为 scrypt
+    // Automatic migration: if password hash is bcrypt, convert to scrypt
     import talkyard.server.security.PasswordMigration
     if (PasswordMigration.needsMigration(loginGrant.user.passwordHash.getOrElse(""))) {
       try {
@@ -145,7 +145,7 @@ class LoginWithPasswordController @Inject()(cc: ControllerComponents, edContext:
         )
       } catch {
         case ex: Exception =>
-          // 迁移失败不影响登录，只记录警告
+          // Migration failure does not affect login, only log warning
           logger.warn(s"Failed to migrate password for user ${loginGrant.user.username}: ${ex.getMessage}", ex)
       }
     }

@@ -159,7 +159,7 @@ trait LoginSiteDaoMixin extends SiteTransaction {
       throw MemberHasNoPasswordException
     }
 
-    // 使用新的验证方法，支持 bcrypt 和 scrypt
+    // Use new verification method, supports bcrypt and scrypt
     import talkyard.server.security.PasswordMigration
     val okPassword = PasswordMigration.verifyPassword(loginAttempt.password, correctHash)
 

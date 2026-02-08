@@ -9,27 +9,27 @@ import org.mindrot.jbcrypt.BCrypt
 import play.api.Logger
 
 /**
- * 密码哈希迁移工具
- * 支持从 bcrypt 自动迁移到 scrypt
+ * Password hash migration utility
+ * Supports automatic migration from bcrypt to scrypt
  */
 object PasswordMigration {
   
   private val logger = Logger(this.getClass)
   
   /**
-   * 验证密码，支持多种哈希格式
+   * Verify password, supports multiple hash formats
    */
   def verifyPassword(plainPassword: String, storedHash: String): Boolean = {
     try {
       if (isBcryptHash(storedHash)) {
-        // bcrypt 格式
+        // bcrypt format
         BCrypt.checkpw(plainPassword, storedHash)
       } else if (storedHash.startsWith("scrypt:")) {
-        // scrypt 格式（Talkyard 原生格式）
+        // scrypt format (Talkyard native format)
         val hashWithoutPrefix = storedHash.substring(7)
         SCryptUtil.check(plainPassword, hashWithoutPrefix)
       } else {
-        // 未知格式
+        // Unknown format
         logger.warn(s"Unknown password hash format: ${storedHash.take(10)}... [TyEUNKNPWDHASH]")
         false
       }
@@ -44,22 +44,22 @@ object PasswordMigration {
   }
   
   /**
-   * 生成 scrypt 哈希（Talkyard 标准格式）
+   * Generate scrypt hash (Talkyard standard format)
    */
   def generateScryptHash(plainPassword: String): String = {
-    // 使用 Talkyard 的标准参数: N=16384, r=8, p=1
+    // Use Talkyard standard parameters: N=16384, r=8, p=1
     "scrypt:" + SCryptUtil.scrypt(plainPassword, 16384, 8, 1)
   }
   
   /**
-   * 检查是否需要迁移到 scrypt
+   * Check if migration to scrypt is needed
    */
   def needsMigration(storedHash: String): Boolean = {
     isBcryptHash(storedHash)
   }
   
   /**
-   * 检查是否为 bcrypt 哈希
+   * Check if hash is bcrypt format
    */
   def isBcryptHash(hash: String): Boolean = {
     hash.startsWith("$2a$") || 
@@ -68,7 +68,7 @@ object PasswordMigration {
   }
   
   /**
-   * 获取哈希类型（用于日志）
+   * Get hash type (for logging purposes)
    */
   def getHashType(storedHash: String): String = {
     if (storedHash.startsWith("$2a$")) "bcrypt-2a"

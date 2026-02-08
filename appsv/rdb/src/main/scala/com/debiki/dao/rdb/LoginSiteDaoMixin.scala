@@ -25,6 +25,7 @@ import java.{sql => js, util => ju}
 import Rdb._
 import RdbUtil._
 import org.scalactic.{Bad, Good}
+import org.mindrot.jbcrypt.BCrypt
 
 
 
@@ -158,7 +159,23 @@ trait LoginSiteDaoMixin extends SiteTransaction {
     val correctHash = user.passwordHash getOrElse {
       throw MemberHasNoPasswordException
     }
-    val okPassword = checkPassword(loginAttempt.password, hash = correctHash)
+    // Support both bcrypt and scrypt password verification [TyMPWDVERIF]
+    val okPassword = try {
+      if (correctHash.startsWith("$2a$") || correctHash.startsWith("$2b$") || correctHash.startsWith("$2y$")) {
+        // Verify bcrypt hash (for legacy passwords)
+        BCrypt.checkpw(loginAttempt.password, correctHash)
+      } else {
+        // Verify scrypt hash (Talkyard standard)
+        checkPassword(loginAttempt.password, hash = correctHash)
+      }
+    } catch {
+      case e: IllegalArgumentException =>
+        logger.warn(s"Invalid password hash format [TyEINVLDHASH]")
+        false
+      case e: Exception =>
+        logger.error(s"Password verification error: ${e.getMessage} [TyEPWDVERIFY]", e)
+        false
+    }
     if (!okPassword)
       throw BadPasswordException
 

@@ -108,6 +108,18 @@ object DbDao {
   /** Automatic test might use cleartext passwords. */
   val CleartextPrefix = "cleartext:"
 
+  /** Check if a password hash is in bcrypt format. */
+  def isBcryptHash(hash: String): Boolean = {
+    hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$")
+  }
+
+  /** Get the bcrypt variant name for logging purposes. */
+  def getBcryptVariant(hash: String): String = {
+    if (hash.startsWith("$2a$")) "bcrypt-2a"
+    else if (hash.startsWith("$2b$")) "bcrypt-2b"
+    else "bcrypt-2y"
+  }
+
   // This could be moved to debiki-server, so the dao won't have this
   // dependency on the password hashing algorithm? Just have the dao module load the
   // password hash, but don't actually check the hash inside the dao.
@@ -119,6 +131,11 @@ object DbDao {
     else if (hash.startsWith(CleartextPrefix)) {
       val cleartext = hash.drop(CleartextPrefix.length)
       plainTextPassword == cleartext
+    }
+    // Support bcrypt password hashes (for migration from other systems) [TyMBCRYPT]
+    else if (isBcryptHash(hash)) {
+      import org.mindrot.jbcrypt.BCrypt
+      BCrypt.checkpw(plainTextPassword, hash)
     }
     else if (!hash.contains(':')) {
       die("EsE2PUY8", s"No password algorithm prefix in password hash")

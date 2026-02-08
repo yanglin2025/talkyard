@@ -845,6 +845,19 @@ trait UserDao {
   }
 
 
+  /**
+   * Update user's password hash without validation.
+   * Used for migrating passwords to a new hash format.
+   * Does not check password strength since we're migrating existing validated passwords.
+   */
+  def updateUserPasswordHash(userId: UserId, newPasswordHash: String): Unit = {
+    readWriteTransaction { tx =>
+      val user = tx.loadTheUserInclDetails(userId).copy(passwordHash = Some(newPasswordHash))
+      tx.updateUserInclDetails(user)
+    }
+  }
+
+
   def loginAsGuest(loginAttempt: GuestLoginAttempt): Guest = {
     val settings = getWholeSiteSettings()
     dieIf(!settings.canLoginAsGuest, "TyE052MAKD3", "Guest login not enabled")

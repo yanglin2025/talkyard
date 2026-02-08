@@ -129,6 +129,38 @@ class LoginWithPasswordController @Inject()(cc: ControllerComponents, edContext:
         case ex: QuickMessageException =>
           logger.warn(s"Deprecated exception [TyEQMSGEX02]", ex)
           throwForbidden("TyEQMSGEX02", ex.getMessage)
+        case ex: Exception =>
+          logger.error(s"Unexpected login error [TyELGINUNKN]: ${ex.getMessage}", ex)
+          deny("UNKNOWN_ERR")
+      }
+    }
+
+    // Auto-migrate bcrypt passwords to scrypt [TyMPWDMIGR]
+    loginGrant.user.passwordHash.foreach { currentHash =>
+      // Check if password is in bcrypt format
+      if (DbDao.isBcryptHash(currentHash)) {
+        try {
+          // Generate new scrypt hash using Talkyard's standard method
+          val newHash = DbDao.saltAndHashPassword(password)
+          
+          // Update password hash in database
+          dao.updateUserPasswordHash(loginGrant.user.id, newHash)
+          
+          // Log successful migration
+          logger.info(
+            s"Migrated password for user ${loginGrant.user.username} " +
+            s"from ${DbDao.getBcryptVariant(currentHash)} to scrypt [TyMPWDMIGR]"
+          )
+        } catch {
+          case ex: Exception =>
+            // Log error but don't block login - migration can retry on next login
+            logger.warn(
+              s"Failed to migrate password for user ${loginGrant.user.username}: " +
+              s"${ex.getMessage} [TyEPWDMIGR]",
+              ex
+            )
+            // Don't throw - allow login to succeed even if migration fails
+        }
       }
     }
 

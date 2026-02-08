@@ -158,7 +158,11 @@ trait LoginSiteDaoMixin extends SiteTransaction {
     val correctHash = user.passwordHash getOrElse {
       throw MemberHasNoPasswordException
     }
-    val okPassword = checkPassword(loginAttempt.password, hash = correctHash)
+
+    // Use new verification method, supports bcrypt and scrypt
+    import talkyard.server.security.PasswordMigration
+    val okPassword = PasswordMigration.verifyPassword(loginAttempt.password, correctHash)
+
     if (!okPassword)
       throw BadPasswordException
 

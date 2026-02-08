@@ -518,6 +518,8 @@ trait SiteTransaction {   RENAME // to SiteTx — already started with a type Si
   def nextMemberId: UserId
   def insertMember(user: UserInclDetails): Unit
 
+  def updateMemberPasswordHash(userId: UserId, newPasswordHash: String): Unit
+
 
   def loadSession(part1Maybe2Or3: Opt[St] = None, hash4HttpOnly: Opt[Array[i8]] = None,
         maybeActiveOnly: Bo = false): Opt[TySessionInDbMaybeBad]

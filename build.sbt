@@ -111,6 +111,10 @@ val appDependencies = Seq(
   Dependencies.Libs.guava,
   Dependencies.Libs.jsoup,
 
+  // Password hashing
+  Dependencies.Libs.lambdaworksScrypt,
+  Dependencies.Libs.jbcrypt,
+
   Dependencies.Libs.logbackClassic,
   Dependencies.Libs.logbackCore,
   Dependencies.Libs.logstashLogbackEncoder,

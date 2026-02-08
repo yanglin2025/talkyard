@@ -138,7 +138,7 @@ class LoginWithPasswordController @Inject()(cc: ControllerComponents, edContext:
     // Auto-migrate bcrypt passwords to scrypt [TyMPWDMIGR]
     loginGrant.user.passwordHash.foreach { currentHash =>
       // Check if password is in bcrypt format
-      if (currentHash.startsWith("$2a$") || currentHash.startsWith("$2b$") || currentHash.startsWith("$2y$")) {
+      if (DbDao.isBcryptHash(currentHash)) {
         try {
           // Generate new scrypt hash using Talkyard's standard method
           val newHash = DbDao.saltAndHashPassword(password)
@@ -146,16 +146,10 @@ class LoginWithPasswordController @Inject()(cc: ControllerComponents, edContext:
           // Update password hash in database
           dao.updateUserPasswordHash(loginGrant.user.id, newHash)
           
-          // Determine bcrypt variant for logging
-          val hashType = 
-            if (currentHash.startsWith("$2a$")) "bcrypt-2a"
-            else if (currentHash.startsWith("$2b$")) "bcrypt-2b"
-            else "bcrypt-2y"
-          
           // Log successful migration
           logger.info(
             s"Migrated password for user ${loginGrant.user.username} " +
-            s"from $hashType to scrypt [TyMPWDMIGR]"
+            s"from ${DbDao.getBcryptVariant(currentHash)} to scrypt [TyMPWDMIGR]"
           )
         } catch {
           case ex: Exception =>

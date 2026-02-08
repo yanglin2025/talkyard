@@ -852,8 +852,7 @@ trait UserDao {
    */
   def updateUserPasswordHash(userId: UserId, newPasswordHash: String): Unit = {
     readWriteTransaction { tx =>
-      var user = tx.loadTheUserInclDetails(userId)
-      user = user.copy(passwordHash = Some(newPasswordHash))
+      val user = tx.loadTheUserInclDetails(userId).copy(passwordHash = Some(newPasswordHash))
       tx.updateUserInclDetails(user)
     }
   }

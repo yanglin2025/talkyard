@@ -169,11 +169,8 @@ trait LoginSiteDaoMixin extends SiteTransaction {
         checkPassword(loginAttempt.password, hash = correctHash)
       }
     } catch {
-      case e: IllegalArgumentException =>
-        logger.warn(s"Invalid password hash format [TyEINVLDHASH]")
-        false
-      case e: Exception =>
-        logger.error(s"Password verification error: ${e.getMessage} [TyEPWDVERIFY]", e)
+      case _: Exception =>
+        // Invalid password hash format or other verification error [TyEPWDVERIFY]
         false
     }
     if (!okPassword)

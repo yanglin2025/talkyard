@@ -120,6 +120,11 @@ object DbDao {
       val cleartext = hash.drop(CleartextPrefix.length)
       plainTextPassword == cleartext
     }
+    // Support bcrypt password hashes (for migration from other systems) [TyMBCRYPT]
+    else if (hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$")) {
+      import org.mindrot.jbcrypt.BCrypt
+      BCrypt.checkpw(plainTextPassword, hash)
+    }
     else if (!hash.contains(':')) {
       die("EsE2PUY8", s"No password algorithm prefix in password hash")
     }

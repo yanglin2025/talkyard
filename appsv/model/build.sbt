@@ -18,6 +18,7 @@ libraryDependencies ++= Seq(
   Dependencies.Play.json,
   // COULD move to the server module?  [mv_scrypt_2_srv]
   Dependencies.Libs.lambdaworksScrypt,
+  "org.mindrot" % "jbcrypt" % "0.4",  // bcrypt for password migration [TyMBCRYPT]
   // CLEAN_UP remove Mockito and Spec2. Use only ScalaTest, need to edit some tests.
   Dependencies.Libs.mockito,
   Dependencies.Libs.specs2,
